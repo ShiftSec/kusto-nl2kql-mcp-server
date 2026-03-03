@@ -146,9 +146,94 @@ async def enrich(request: Request) -> JSONResponse:
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+async def tables(request: Request) -> JSONResponse:
+    """
+    List all tables in a Kusto database.
+
+    POST /tables
+    {
+        "cluster_url": "https://...",   # optional, defaults to KUSTO_CLUSTER_URL env
+        "database": "mydb"              # optional, defaults to KUSTO_DEFAULT_DATABASE env
+    }
+    """
+    from .constants import KUSTO_CLUSTER_URL, KUSTO_DEFAULT_DATABASE
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    cluster_url = body.get("cluster_url") or KUSTO_CLUSTER_URL
+    database = body.get("database") or KUSTO_DEFAULT_DATABASE
+
+    if not cluster_url:
+        return JSONResponse({"error": "No cluster_url provided and KUSTO_CLUSTER_URL env not set"}, status_code=400)
+    if not database:
+        return JSONResponse({"error": "No database provided and KUSTO_DEFAULT_DATABASE env not set"}, status_code=400)
+
+    from .mcp_server import list_tables
+
+    try:
+        result = await list_tables.fn(
+            cluster_url=cluster_url,
+            database=database,
+        )
+        return Response(content=result, media_type="application/json")
+    except Exception as e:
+        logger.error("REST API tables error: %s", e)
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+async def schema(request: Request) -> JSONResponse:
+    """
+    Discover schema for a single table.
+
+    POST /schema
+    {
+        "table_name": "MyTable",         # required
+        "cluster_url": "https://...",     # optional, defaults to KUSTO_CLUSTER_URL env
+        "database": "mydb"               # optional, defaults to KUSTO_DEFAULT_DATABASE env
+    }
+    """
+    from .constants import KUSTO_CLUSTER_URL, KUSTO_DEFAULT_DATABASE
+
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    table_name = body.get("table_name")
+    if not table_name:
+        return JSONResponse({"error": "Missing required field: table_name"}, status_code=400)
+
+    cluster_url = body.get("cluster_url") or KUSTO_CLUSTER_URL
+    database = body.get("database") or KUSTO_DEFAULT_DATABASE
+
+    if not cluster_url:
+        return JSONResponse({"error": "No cluster_url provided and KUSTO_CLUSTER_URL env not set"}, status_code=400)
+    if not database:
+        return JSONResponse({"error": "No database provided and KUSTO_DEFAULT_DATABASE env not set"}, status_code=400)
+
+    from .mcp_server import schema_memory
+
+    try:
+        result = await schema_memory.fn(
+            operation="discover",
+            cluster_url=cluster_url,
+            database=database,
+            table_name=table_name,
+        )
+        return Response(content=result, media_type="application/json")
+    except Exception as e:
+        logger.error("REST API schema error: %s", e)
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 rest_routes = [
     Route("/health", health, methods=["GET"]),
     Route("/query", query, methods=["POST"]),
     Route("/discover", discover, methods=["POST"]),
     Route("/enrich", enrich, methods=["POST"]),
+    Route("/tables", tables, methods=["POST"]),
+    Route("/schema", schema, methods=["POST"]),
 ]
