@@ -24,6 +24,7 @@ from azure.kusto.data.exceptions import KustoServiceError
 # Constants import
 from .constants import DEFAULT_QUERY_TIMEOUT
 from .memory import get_memory_manager
+from .observability import trace, update_trace
 from .utils import (
     extract_cluster_and_database_from_query,
     extract_tables_from_query,
@@ -151,6 +152,7 @@ def _parse_kusto_response(response) -> pd.DataFrame:
     return df
 
 @retry_on_exception()
+@trace(name="kusto_query_execution")
 def _execute_kusto_query_sync(kql_query: str, cluster: str, database: str, _timeout: int = DEFAULT_QUERY_TIMEOUT) -> pd.DataFrame:
     """
     Core synchronous function to execute a KQL query against a Kusto cluster.
@@ -175,6 +177,15 @@ def _execute_kusto_query_sync(kql_query: str, cluster: str, database: str, _time
             df = _parse_kusto_response(response)
             logger.debug("Query returned %d rows in %.2fms.", len(df), execution_time_ms)
 
+            update_trace(metadata={
+                "cluster": cluster_url,
+                "database": database,
+                "query_preview": kql_query[:200],
+                "row_count": str(len(df)),
+                "execution_time_ms": str(round(execution_time_ms, 2)),
+                "is_mgmt_query": str(is_mgmt_query),
+            })
+
             try:
                 loop = asyncio.get_running_loop()
                 loop.create_task(_post_execution_learning_bg(kql_query, cluster, database, df, execution_time_ms))
@@ -185,6 +196,11 @@ def _execute_kusto_query_sync(kql_query: str, cluster: str, database: str, _time
 
         except KustoServiceError as e:
             error_str = str(e)
+            update_trace(
+                metadata={"cluster": cluster_url, "database": database, "query_preview": kql_query[:200]},
+                level="ERROR",
+                status_message=error_str[:200],
+            )
             # Check for SEM0100 (Missing Column) or "Failed to resolve" errors
             if 'sem0100' in error_str.lower() or "failed to resolve scalar expression" in error_str.lower():
                 logger.info("SEM0100 error detected: %s", error_str[:100])
