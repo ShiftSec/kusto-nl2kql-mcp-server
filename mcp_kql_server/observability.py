@@ -1,9 +1,10 @@
 """Langfuse observability."""
 
+import functools
 import logging
 import os
 
-from langfuse import observe, get_client
+from langfuse import observe, get_client, propagate_attributes
 import langfuse.openai as langfuse_openai
 
 logger = logging.getLogger(__name__)
@@ -14,9 +15,30 @@ if _baseurl:
     os.environ["LANGFUSE_HOST"] = _baseurl
 
 
-def trace(name: str | None = None, **kwargs):
-    """Return @observe() decorator."""
-    return observe(name=name, **kwargs)
+def trace(name: str | None = None, tags: list[str] | None = None, **kwargs):
+    """Return @observe() decorator with optional tags propagation."""
+    if not tags:
+        return observe(name=name, **kwargs)
+
+    def decorator(fn):
+        observed = observe(name=name, **kwargs)(fn)
+
+        @functools.wraps(fn)
+        async def async_wrapper(*a, **kw):
+            with propagate_attributes(tags=tags):
+                return await observed(*a, **kw)
+
+        @functools.wraps(fn)
+        def sync_wrapper(*a, **kw):
+            with propagate_attributes(tags=tags):
+                return observed(*a, **kw)
+
+        import asyncio
+        if asyncio.iscoroutinefunction(fn):
+            return async_wrapper
+        return sync_wrapper
+
+    return decorator
 
 
 def get_openai_module():

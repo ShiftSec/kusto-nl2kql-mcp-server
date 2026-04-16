@@ -152,7 +152,7 @@ def _parse_kusto_response(response) -> pd.DataFrame:
     return df
 
 @retry_on_exception()
-@trace(name="kusto_query_execution")
+@trace(name="kusto_mcp_kusto_execution", tags=["kusto_mcp", "kql_execute"])
 def _execute_kusto_query_sync(kql_query: str, cluster: str, database: str, _timeout: int = DEFAULT_QUERY_TIMEOUT) -> pd.DataFrame:
     """
     Core synchronous function to execute a KQL query against a Kusto cluster.

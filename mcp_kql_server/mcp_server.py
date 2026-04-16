@@ -49,7 +49,7 @@ kusto_manager_global = None
 
 
 @mcp.tool()
-@trace(name="execute_kql_query")
+@trace(name="kusto_mcp_execute_kql_query", tags=["kusto_mcp", "kql_execute"])
 async def execute_kql_query(
     query: str,
     cluster_url: str,
@@ -319,7 +319,7 @@ async def execute_kql_query(
 
         return ErrorHandler.safe_json_dumps(error_result, indent=2)
 
-@trace(name="nl2kql_pipeline")
+@trace(name="kusto_mcp_nl2kql_pipeline", tags=["kusto_mcp", "nl2kql"])
 async def _generate_kql_from_natural_language(
     natural_language_query: str,
     cluster_url: str,
@@ -584,7 +584,7 @@ async def _generate_kql_from_natural_language(
 
 
 @mcp.tool()
-@trace(name="list_tables")
+@trace(name="kusto_mcp_list_tables", tags=["kusto_mcp", "kql_discovery"])
 async def list_tables(
     cluster_url: str,
     database: str,
@@ -617,7 +617,7 @@ async def list_tables(
 
 
 @mcp.tool()
-@trace(name="schema_memory")
+@trace(name="kusto_mcp_schema_memory", tags=["kusto_mcp", "kql_schema"])
 async def schema_memory(
     operation: str,
     cluster_url: Optional[str] = None,
