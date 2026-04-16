@@ -33,6 +33,7 @@ from .utils import (
 )
 from .kql_auth import authenticate_kusto
 from .kql_validator import KQLValidator
+from .observability import trace, update_trace, flush as flush_langfuse
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ kusto_manager_global = None
 
 
 @mcp.tool()
+@trace(name="execute_kql_query")
 async def execute_kql_query(
     query: str,
     cluster_url: str,
@@ -317,6 +319,7 @@ async def execute_kql_query(
 
         return ErrorHandler.safe_json_dumps(error_result, indent=2)
 
+@trace(name="nl2kql_pipeline")
 async def _generate_kql_from_natural_language(
     natural_language_query: str,
     cluster_url: str,
@@ -581,6 +584,7 @@ async def _generate_kql_from_natural_language(
 
 
 @mcp.tool()
+@trace(name="list_tables")
 async def list_tables(
     cluster_url: str,
     database: str,
@@ -613,6 +617,7 @@ async def list_tables(
 
 
 @mcp.tool()
+@trace(name="schema_memory")
 async def schema_memory(
     operation: str,
     cluster_url: Optional[str] = None,
@@ -1343,6 +1348,8 @@ def main():
             mcp.run()
     except (RuntimeError, OSError, ImportError) as e:
         logger.error("[ERROR] Failed to start server: %s", e)
+    finally:
+        flush_langfuse()
 
 if __name__ == "__main__":
     main()

@@ -60,6 +60,8 @@ dependencies = [
     # PostgreSQL + pgvector (memory persistence)
     "psycopg2-binary>=2.9.0,<3.0.0",
     "pgvector>=0.3.0,<1.0.0",
+    # Observability
+    "langfuse>=2.0.0",
 ]
 
 # No optional dependencies needed for production

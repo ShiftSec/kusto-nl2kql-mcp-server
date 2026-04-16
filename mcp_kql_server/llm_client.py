@@ -9,6 +9,7 @@ from .constants import (
     AZURE_OPENAI_DEPLOYMENT,
     AZURE_OPENAI_EMBEDDING_DEPLOYMENT,
 )
+from .observability import get_openai_module
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,8 @@ def _get_async_client():
         return _async_client
     if not AZURE_OPENAI_ENDPOINT or not AZURE_OPENAI_API_KEY or not AZURE_OPENAI_DEPLOYMENT:
         return None
-    from openai import AsyncAzureOpenAI
+    oai = get_openai_module()
+    AsyncAzureOpenAI = oai.AsyncAzureOpenAI
 
     _async_client = AsyncAzureOpenAI(
         azure_endpoint=AZURE_OPENAI_ENDPOINT,
@@ -41,7 +43,8 @@ def _get_sync_client():
         return _sync_client
     if not AZURE_OPENAI_ENDPOINT or not AZURE_OPENAI_API_KEY or not AZURE_OPENAI_EMBEDDING_DEPLOYMENT:
         return None
-    from openai import AzureOpenAI
+    oai = get_openai_module()
+    AzureOpenAI = oai.AzureOpenAI
 
     _sync_client = AzureOpenAI(
         azure_endpoint=AZURE_OPENAI_ENDPOINT,
