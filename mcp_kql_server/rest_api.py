@@ -51,12 +51,11 @@ async def query(request: Request) -> JSONResponse:
     if not database:
         return JSONResponse({"error": "No database provided and KUSTO_DEFAULT_DATABASE env not set"}, status_code=400)
 
-    # Import the MCP tool and call its underlying function (.fn)
-    # since @mcp.tool() wraps it in a FunctionTool object
+    # Import the MCP tool function (fastmcp 3 @mcp.tool() returns the plain function)
     from .mcp_server import execute_kql_query
 
     try:
-        result = await execute_kql_query.fn(
+        result = await execute_kql_query(
             query=query_text,
             cluster_url=cluster_url,
             database=database,
@@ -96,7 +95,7 @@ async def discover(request: Request) -> JSONResponse:
     from .mcp_server import schema_memory
 
     try:
-        result = await schema_memory.fn(
+        result = await schema_memory(
             operation="refresh_schema",
             cluster_url=cluster_url,
             database=database,
@@ -135,7 +134,7 @@ async def enrich(request: Request) -> JSONResponse:
     from .mcp_server import schema_memory
 
     try:
-        result = await schema_memory.fn(
+        result = await schema_memory(
             operation="enrich_descriptions",
             cluster_url=cluster_url,
             database=database,
@@ -174,7 +173,7 @@ async def tables(request: Request) -> JSONResponse:
     from .mcp_server import list_tables
 
     try:
-        result = await list_tables.fn(
+        result = await list_tables(
             cluster_url=cluster_url,
             database=database,
         )
@@ -217,7 +216,7 @@ async def schema(request: Request) -> JSONResponse:
     from .mcp_server import schema_memory
 
     try:
-        result = await schema_memory.fn(
+        result = await schema_memory(
             operation="discover",
             cluster_url=cluster_url,
             database=database,
