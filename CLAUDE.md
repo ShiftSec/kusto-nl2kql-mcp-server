@@ -82,10 +82,10 @@ Langfuse is a hard dependency. All LLM calls (NL2KQL, embeddings, descriptions) 
 
 ## Deployment
 
-Deployed as a sidecar container in the nexus Helm chart:
-- **Chart:** `shift-platform/.../nexus-chart/templates/kql-mcp-server-deployment.yaml`
+Runs as a sidecar container alongside the service that consumes it, on Kubernetes:
 - **Image:** Dockerfile in `deployment/`
-- **Secrets:** Shared via the nexus externalSecrets target (Langfuse keys, DB creds, Azure OpenAI keys)
+- **Config:** everything is read from the environment variables listed above; nothing is loaded from files at runtime
+- **Secrets:** the Azure OpenAI, Langfuse, database and Kusto service-principal values are injected as environment variables by the hosting platform's secret manager, never committed to this repo
 
 ## NL2KQL Pipeline (`mcp_server.py:_generate_kql_from_natural_language`)
 
