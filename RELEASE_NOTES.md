@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Update the Azure CLI and HTTP/DNS dependencies and refresh the requirements files.
+- Update the locked cryptography, PyOpenSSL, and OAuthLib dependencies.
 
 ---
 
