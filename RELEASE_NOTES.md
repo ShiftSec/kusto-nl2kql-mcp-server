@@ -1,5 +1,9 @@
 # Release Notes - MCP KQL Server
 
+## Unreleased
+
+- Update the Azure CLI and HTTP/DNS dependencies and refresh the requirements files.
+
 ---
 
 ## 🚀 **v2.1.0 - NL2KQL Enhancement & Version Management**
