@@ -1,7 +1,7 @@
 # MCP KQL Server - Production Dependencies (slim, no azure-cli)
 
 # Core MCP Framework
-fastmcp>=3.4.10,<4.0.0
+fastmcp>=3.2.0,<4.0.0
 pydantic>=2.0.0,<3.0.0
 typing-extensions>=4.0.0,<5.0.0
 
@@ -25,7 +25,7 @@ langfuse>=2.0.0
 
 # Networking and HTTP
 httpx>=0.25.0,<1.0.0
-requests>=2.33.0,<3.0.0
+requests>=2.31.0,<3.0.0
 
 # Utilities
 tenacity>=8.0.0,<10.0.0
